@@ -1,0 +1,95 @@
+#!/bin/bash
+
+usage="Usage:resize-resolution-user [--high] [--low]"
+log="/tmp/resize.log"
+
+echo $$ >> $log
+date +%s.%N >> $log
+
+#if [ $(pidof -x resize-resolution-user | wc -w ) -gt 2 ]; then
+#      echo "$0: already running , exit. ($1)" >> $log
+#      exit 1
+#fi
+
+
+if test $# -eq 0; then
+      echo "${usage}" 1>&2
+      exit 1
+fi 
+
+while test $# -gt 0; do
+  case "$1" in
+  --high)
+    # apply for user immediately.
+    # font
+    gsettings set org.mate.font-rendering dpi 192.0
+
+    # caja 
+    gsettings set org.mate.caja.icon-view     default-zoom-level    'larger'
+    gsettings set org.mate.caja.icon-view     default-zoom-level    'larger'
+    gsettings set org.mate.caja.compact-view  default-zoom-level    'larger'
+    gsettings set org.mate.caja.list-view     default-zoom-level    'standard'
+
+    # mate-panel
+    panel_high=$(dconf read /org/mate/panel/toplevels/top/size)
+    if [ $panel_high != 50 ]; then
+        dconf write /org/mate/panel/toplevels/top/size 50
+        killall -u $USER mate-panel
+        sleep 1
+        for i in $(seq 3); do
+            sleep 3
+            #if [ $(pgrep -u `id -u` mate-panel) = "" ]; then
+            panel_pid=$(pgrep -u `id -u` mate-panel)
+            if test -z "$panel_pid" ; then
+                echo "$0: mate-panel dead, create it . ($1)" >> $log
+                mate-panel &
+            else
+                echo "$0: mate-panel exist, exit. ($1)" >> $log
+                break
+            fi
+        done
+    fi
+
+    exit 0 ;;
+
+  --low)
+    # apply for user immediately.
+    #font
+    gsettings set org.mate.font-rendering dpi 96.0
+
+    #caja
+    gsettings set org.mate.caja.icon-view     default-zoom-level    'standard'
+    gsettings set org.mate.caja.icon-view     default-zoom-level    'standard'
+    gsettings set org.mate.caja.compact-view  default-zoom-level    'standard'
+    gsettings set org.mate.caja.list-view     default-zoom-level    'smaller'
+
+    # mate-panel
+    panel_high=$(dconf read /org/mate/panel/toplevels/top/size)
+    if [ $panel_high != 40 ]; then
+        dconf write /org/mate/panel/toplevels/top/size 40
+        killall -u $USER mate-panel
+        sleep 1
+        for i in $(seq 3); do
+            sleep 3
+            panel_pid=$(pgrep -u `id -u` mate-panel)
+            if test -z "$panel_pid" ; then
+                echo "$0: mate-panel dead, create it . ($1)" >> $log
+                mate-panel &
+            else
+                echo "$0: mate-panel exist, exit. ($1)" >> $log
+                break
+            fi
+        done
+    fi
+
+    exit 0 ;;
+
+  -*)
+    exit 1 ;;
+
+  *)
+    exit 1 ;;
+  esac
+done
+
+
